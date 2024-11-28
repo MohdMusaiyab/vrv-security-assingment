@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, RequestHandler } from "express";
 import prisma from "../utils/prisma";
 import jwt from "jsonwebtoken";
 import {
@@ -8,14 +8,16 @@ import {
   hashPassword,
 } from "../utils/auth";
 
-export const registerController = async (req: Request, res: Response) => {
+export const registerController:RequestHandler = async (req: Request, res: Response) => {
   try {
-    const { email, password, name, uniRollNo } = req.body;
+    const { email, password, name, uniRollNo } = await req.body;
     if (!email || !password || !name || !uniRollNo) {
-       res
+      res
         .status(400)
         .send({ message: "Please fill all the fields", sucess: false });
+        return;
     }
+    
     //Now we will check if the user already exists using email or uniRollNo
     const user = await prisma.user.findFirst({
       where: {
@@ -23,7 +25,7 @@ export const registerController = async (req: Request, res: Response) => {
       },
     });
     if (user) {
-       res.status(400).send({ message: "User already exists", success: false });
+      res.status(400).send({ message: "User already exists", success: false });
     }
 
     //Now we will create a new user in the database
@@ -37,9 +39,9 @@ export const registerController = async (req: Request, res: Response) => {
         uniRollNo,
       },
     });
-     res.status(201).send({ message: "User created", success: true });
+    res.status(201).send({ message: "User created", success: true });
   } catch (error) {
-     res.status(500).send({ message: "Internal Server Error", success: false });
+    res.status(500).send({ message: "Internal Server Error", success: false });
   }
 };
 
@@ -52,6 +54,7 @@ export const loginController = async (req: Request, res: Response) => {
       res
         .status(400)
         .json({ message: "Please fill all the fields", success: false });
+        return;
     }
     //Now we will check if the user exists or not
     const user = await prisma.user.findFirst({
